@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAUA Student Biometric Verification</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .image-preview {
+            margin-top: 20px;
+        }
+        .verified-info {
+            margin-top: 20px;
+        }
+        .verified-info h3 {
+            color: #28a745;
+        }
+        .image-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .image-section img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .uploaded-image-preview {
+            margin-top: 20px;
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 150px;
+            max-height: 150px;
+            text-align: center;
+        }
+        .uploaded-image-preview img {
+            width: 100%;
+            height: auto;
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">AAUA Student Biometric Verification Page</h1>
+        <form id="verificationForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="verificationImage">Select Image:</label>
+                <input type="file" class="form-control" id="verificationImage" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify</button>
+        </form>
+
+        <div id="alert" class="alert alert-info mt-3" style="display: none;"></div>
+        <br>
+
+        <!-- Uploaded verification image section -->
+        <h4>Uploaded Verification Image</h4>
+
+        <div id="uploadedImageSection" class="uploaded-image-preview" style="display: none;">
+            <img id="uploadedImage" src="" alt="Verification Image" />
+        </div>
+
+        <!-- Verified student info section -->
+        <div id="verifiedInfo" class="verified-info" style="display: none;">
+            <h3>Verification successful!</h3>
+            <p><strong>Student Name:</strong> <span id="studentName"></span></p>
+            <p><strong>Matric Number:</strong> <span id="matricNumber"></span></p>
+            <p><strong>Faculty: </strong> <span id="faculty"></span></p>
+            <p><strong>Department:</strong> <span id="department"></span></p>
+            <p><strong>Level</strong> <span id="level"></span></p>
+            <p><strong>Match  Confindence Level:</strong> <span id="confidence"></span></p>
+        </div>
+
+        <!-- Fetched images section -->
+        <div id="imagesSection" class="image-section" style="display: none;">
+            <h4>Student's Registered Images</h4>
+            <div id="imagesContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+document.getElementById('verificationForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const alertBox = document.getElementById('alert');
+    const uploadedImageSection = document.getElementById('uploadedImageSection');
+    const verifiedInfo = document.getElementById('verifiedInfo');
+    const imagesSection = document.getElementById('imagesSection');
+    const uploadedImage = document.getElementById('uploadedImage');
+    const studentName = document.getElementById('studentName');
+    const matricNumber = document.getElementById('matricNumber');
+    const Faculty = document.getElementById('faculty');
+    const Department = document.getElementById('department');
+    const Level = document.getElementById('level');
+    const Confidence = document.getElementById('confidence');
+    const imagesContainer = document.getElementById('imagesContainer');
+
+    // Reset visibility and content
+    alertBox.style.display = 'none';
+    alertBox.textContent = 'Processing...';
+    alertBox.className = 'alert alert-info';
+    alertBox.style.display = 'block';
+    uploadedImageSection.style.display = 'none';
+    verifiedInfo.style.display = 'none';
+    imagesSection.style.display = 'none';
+    imagesContainer.innerHTML = '';
+
+    const formData = new FormData();
+    const verificationImage = document.getElementById('verificationImage').files[0];
+    formData.append('image', verificationImage);
+
+    try {
+        const response = await fetch('http://localhost:8000/verify', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+
+        // Display the uploaded verification image
+        uploadedImage.src = URL.createObjectURL(verificationImage);
+        uploadedImageSection.style.display = 'block';
+
+        // Display student info
+        studentName.textContent = data.name;
+        matricNumber.textContent = data.matric_number;
+        Faculty.textContent = data.faculty;
+        Department.textContent = data.department;
+        Level.textContent = data.level;
+        Confidence.textContent = data.confidence;       
+        verifiedInfo.style.display = 'block';
+
+        // Parse media_url from string to array if necessary
+        let mediaUrls = [];
+        try {
+            mediaUrls = JSON.parse(data.media_url);
+        } catch (err) {
+            console.error('Failed to parse media_url:', err);
+        }
+
+        // Display student's registered images
+        if (mediaUrls && Array.isArray(mediaUrls)) {
+            mediaUrls.forEach((url) => {
+                const imgElement = document.createElement('img');
+                imgElement.src = url.trim();
+                imagesContainer.appendChild(imgElement);
+            });
+            imagesSection.style.display = 'block';
+        }
+
+        alertBox.style.display = 'none';  // Hide alert on success
+    } catch (error) {
+        alertBox.textContent = 'An error occurred: ' + error.message;
+        alertBox.className = 'alert alert-danger';
+    }
+});
+    </script>
+</body>
+</html>

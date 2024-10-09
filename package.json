@@ -1,0 +1,21 @@
+{
+    "name": "aaua-facial-biometric",
+    "version": "1.0.0",
+    "description": "Frontend for AAUA facial biometric registration and verification",
+    "main": "index.js",
+    "scripts": {
+        "start": "serve ."
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "bootstrap": "^4.5.2",
+        "cors": "^2.8.5",
+        "express": "^4.21.0"
+    },
+    "devDependencies": {
+        "serve": "^11.3.0"
+    },
+    "proxy": "http://localhost:8000",
+    "author": "",
+    "license": "ISC"
+}

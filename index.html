@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAUA Facial Biometric Registration</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .submitted-info {
+            margin-top: 20px;
+        }
+        .submitted-info h3 {
+            color: #28a745;
+        }
+        .image-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .image-section img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .uploaded-image-preview {
+            margin-top: 20px;
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 150px;
+            max-height: 150px;
+            text-align: center;
+        }
+        .uploaded-image-preview img {
+            width: 100%;
+            height: auto;
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Enroll in AAUA Facial Biometric</h1>
+        <form id="registrationForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="matricNumber">Matric Number:</label>
+                <input type="text" class="form-control" id="matricNumber" required>
+            </div>
+            <div class="form-group">
+                <label for="faculty">Faculty:</label>
+                <input type="text" class="form-control" id="faculty" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" class="form-control" id="department" required>
+            </div>
+            <div class="form-group">
+                <label for="level">Level:</label>
+                <input type="text" class="form-control" id="level" required>
+            </div>
+            <div class="form-group">
+                <label for="image1">Image 1:</label>
+                <input type="file" class="form-control" id="image1" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="image2">Image 2:</label>
+                <input type="file" class="form-control" id="image2" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="image3">Image 3:</label>
+                <input type="file" class="form-control" id="image3" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+
+        <div id="alert" class="alert alert-info mt-3" style="display: none;"></div>
+
+        <!-- Submitted data preview -->
+        <div id="submittedInfo" class="submitted-info" style="display: none;">
+            <h3>Congratulations! You have successfully completed your facial biometric registration.</h3>
+            <p><strong>Name:</strong> <span id="submittedName"></span></p>
+            <p><strong>Matric Number:</strong> <span id="submittedMatricNumber"></span></p>
+            <p><strong>Faculty:</strong> <span id="submittedFaculty"></span></p>
+            <p><strong>Department:</strong> <span id="submittedDepartment"></span></p>
+            <p><strong>Level:</strong> <span id="submittedLevel"></span></p>
+            <h4>Your Uploaded Images:</h4>
+            <div id="imagePreview" class="image-section"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Clear alert and submitted info sections
+            const alertBox = document.getElementById('alert');
+            const submittedInfo = document.getElementById('submittedInfo');
+            const imagePreview = document.getElementById('imagePreview');
+            alertBox.style.display = 'none';
+            submittedInfo.style.display = 'none';
+            imagePreview.innerHTML = '';
+
+            alertBox.textContent = 'Processing...';
+            alertBox.className = 'alert alert-info';
+            alertBox.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('data', JSON.stringify({
+                name: document.getElementById('name').value,
+                matric_number: document.getElementById('matricNumber').value,
+                faculty: document.getElementById('faculty').value,
+                department: document.getElementById('department').value,
+                level: document.getElementById('level').value,
+            }));
+            formData.append('image1', document.getElementById('image1').files[0]);
+            formData.append('image2', document.getElementById('image2').files[0]);
+            formData.append('image3', document.getElementById('image3').files[0]);
+            // Debugging: log form data before submitting
+            for (let pair of formData.entries()) {
+                console.log(pair[0]+ ':', pair[1]);
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/register', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Display success message and submitted data
+                const responseData = await response.json(); // Parse response data if needed
+                console.log(responseData); // Log response to ensure correct data returned
+
+                // Display submitted form values
+                document.getElementById('submittedName').textContent = document.getElementById('name').value;
+                document.getElementById('submittedMatricNumber').textContent = document.getElementById('matricNumber').value;
+                document.getElementById('submittedFaculty').textContent = document.getElementById('faculty').value;
+                document.getElementById('submittedDepartment').textContent = document.getElementById('department').value;
+                document.getElementById('submittedLevel').textContent = document.getElementById('level').value;
+
+                // Display uploaded images preview
+                const image1 = document.getElementById('image1').files[0];
+                const image2 = document.getElementById('image2').files[0];
+                const image3 = document.getElementById('image3').files[0];
+
+                [image1, image2, image3].forEach((imgFile) => {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = URL.createObjectURL(imgFile);
+                    imagePreview.appendChild(imgElement);
+                });
+
+                alertBox.style.display = 'none'; // Hide alert box
+                submittedInfo.style.display = 'block'; // Show success section
+            } catch (error) {
+                // Display error message
+                console.error('Error:', error);
+                alertBox.textContent = error.message || 'An error occurred during submission';
+                alertBox.className = 'alert alert-danger';
+                alertBox.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
